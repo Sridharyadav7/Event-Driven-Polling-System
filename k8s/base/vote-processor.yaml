@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-processor
+  namespace: polling-system
+  labels:
+    app: vote-processor
+spec:
+  replicas: 2  # 2 replicas sharing consumer group — Kafka partitions handle load distribution
+  selector:
+    matchLabels:
+      app: vote-processor
+  template:
+    metadata:
+      labels:
+        app: vote-processor
+    spec:
+      containers:
+        - name: vote-processor
+          image: polling-system/vote-processor:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-service:5432/polldb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: polluser
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: polling-secrets
+                  key: db-password
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-service:9092
+            - name: REDIS_HOST
+              value: redis-service
+            - name: KAFKA_CONSUMER_GROUP
+              value: vote-processor-group
+            - name: APP_ENV
+              value: production
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote-processor-service
+  namespace: polling-system
+spec:
+  selector:
+    app: vote-processor
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+  type: ClusterIP

@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    com.voteprocessor: DEBUG
+    org.springframework.kafka: WARN
+    org.testcontainers: WARN

@@ -1,0 +1,13 @@
+# Dev profile: verbose logging, data seeding enabled
+spring:
+  jpa:
+    show-sql: true
+
+app:
+  seed:
+    enabled: true
+
+logging:
+  level:
+    com.polling: DEBUG
+    org.springframework.kafka: INFO

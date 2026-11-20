@@ -1,0 +1,16 @@
+# Test profile overrides — most values are set by Testcontainers DynamicPropertySource
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    enabled: true
+
+app:
+  poll:
+    close-check-interval-ms: 999999999  # Disable scheduler in tests
+
+logging:
+  level:
+    com.polling: DEBUG
+    org.springframework.kafka: WARN
+    org.testcontainers: WARN
